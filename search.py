@@ -27,20 +27,16 @@ def simulated_annealing(problem, schedule, max_iterations):
 	current = Node(problem.initial_state, problem.score(problem.initial_state))
 	for time in range(max_iterations):
 		temperature = schedule(time)
-		# print(f"temperature is: {temperature}")
-		if temperature < 0.01:
+		if temperature < 0.5:
 			return current.state
 
-		actions = problem.action(current.state)
-		# print(actions)
-		neighbour_states = [problem.result(action, current.state) for action in actions]
-		neighbour_nodes = [Node(state, problem.score(state)) for state in neighbour_states]
-		candidate = random.choice(neighbour_nodes)
+		action = random.choice(problem.action(current.state))
+		state = problem.result(action, current.state)
+		candidate  = Node(state, problem.score(state))
 		gain = candidate.score - current.score
 		if gain > 0 or random.random() < math.exp( gain / temperature):
 			current = candidate
 
-	print(f"temperature is: {temperature}")
 	return None
 
 
