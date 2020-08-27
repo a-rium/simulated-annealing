@@ -23,18 +23,16 @@ class QueensProblem(Problem):
 		return new_state
 
 	def score(self, state):
-		points = self.n
-		for column, row in enumerate(state):
-			for other_column, other_row in enumerate(state):
-				if column == other_column:
-					continue
-
-				dx = abs(other_column - column)
+		under_attack = set()
+		for column, row in enumerate(state[:-1]):
+			for other_column, other_row in enumerate(state[column+1:]):
+				dx = other_column + 1
 				dy = abs(other_row - row)
 				if dy == 0 or dx == dy:
-					points -= 1
-					break
-		return points
+					under_attack.add(column)
+					under_attack.add(other_column + 1)
+		return self.n - len(under_attack)
+
 	
 class MySchedule(object):
 	def __init__(self, starting_temperature):
@@ -42,7 +40,7 @@ class MySchedule(object):
 
 	def __call__(self, time):
 		result = self.temperature
-		self.temperature *= 0.99
+		self.temperature *= 0.999
 		return result
 		
 
@@ -57,21 +55,27 @@ def main():
 		print("N deve essere un numero intero positivo")
 	
 	problem = QueensProblem(n)
-	t0 = 3.2
+	t0 = 2
 	alpha = 3
+	tries = 0
+	raise_temperature_after = 20
 	while True:
-		# solution = simulated_annealing(problem, frasconi_schedule(t0, alpha), 2**33)
-		solution = simulated_annealing(problem, MySchedule(100), 2**33)
+		print("\rAnnealing temperature: {:>4}, try no. {:>6}".format(t0, tries), end="")
+		solution = simulated_annealing(problem, frasconi_schedule(t0, alpha), 2**33)
+		# solution = simulated_annealing(problem, MySchedule(100), 2**33)
 		if solution is not None:
-			print(f"\rFound solution: {solution}", end="")
+			tries += 1
 			score = problem.score(solution)
 			if score == n:
 				print()
+				print("Good solution!")
 				print("===== Checkboard representation =====")
 				queens = zip([i for i in range(len(solution))], solution)
 				for queen in sorted(queens,  key=lambda x: x[1]):
 					print("O" * (queen[0]) + "X" + "O" * (n - queen[0] - 1))
 				break
+			elif tries % raise_temperature_after == 0:
+				t0 += 1
 
 
 if __name__ == "__main__":
