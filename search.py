@@ -27,13 +27,26 @@ def simulated_annealing(problem, schedule, max_iterations):
 	current = Node(problem.initial_state, problem.score(problem.initial_state))
 	for time in range(max_iterations):
 		temperature = schedule(time)
-		if temperature == 0:
+		# print(f"temperature is: {temperature}")
+		if temperature < 0.01:
 			return current.state
 
-		successors = [problem.result(a, current.state) for a in problem.action(current.state)]
-		candidate = random.choice(successors)
-		score_difference = candidate.score - current.score
-		if score_difference > 0 or random.random() < math.exp(score_difference / temperature):
+		actions = problem.action(current.state)
+		# print(actions)
+		neighbour_states = [problem.result(action, current.state) for action in actions]
+		neighbour_nodes = [Node(state, problem.score(state)) for state in neighbour_states]
+		candidate = random.choice(neighbour_nodes)
+		gain = candidate.score - current.score
+		if gain > 0 or random.random() < math.exp( gain / temperature):
 			current = candidate
 
+	print(f"temperature is: {temperature}")
 	return None
+
+
+def frasconi_schedule(t0, alpha):
+	def schedule(t):
+		return t0 / math.log2(t + alpha)
+
+	return schedule
+	
