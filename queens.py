@@ -25,12 +25,12 @@ class QueensProblem(Problem):
 	def score(self, state):
 		under_attack = set()
 		for column, row in enumerate(state[:-1]):
-			for other_column, other_row in enumerate(state[column+1:]):
-				dx = other_column + 1
+			for other_column, other_row in enumerate(state[column + 1:], column + 1):
+				dx = other_column - column
 				dy = abs(other_row - row)
 				if dy == 0 or dx == dy:
 					under_attack.add(column)
-					under_attack.add(other_column + 1)
+					under_attack.add(other_column)
 		return self.n - len(under_attack)
 
 	
