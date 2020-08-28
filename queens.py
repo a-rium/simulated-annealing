@@ -29,7 +29,7 @@ class QueensProblem(Problem):
 		row[0] = n
 		for i in range(n):
 			northeast[i] = 1
-			southeast[i] = 1
+			southeast[n - 1 + i] = 1
 		super().__init__(QueensState(board, row, northeast, southeast))
 
 	def action(self, state):
@@ -42,17 +42,21 @@ class QueensProblem(Problem):
 		return moves
 
 	def result(self, action, state):
+		column, new_row = action
+		old_row = state.board[column]
+		old_diag_ne = column + old_row
+		new_diag_ne = column + new_row
+		old_diag_se = self.n - 1 + (column - old_row)
+		new_diag_se = self.n - 1 + (column - new_row)
+
 		new_state = state.copy()
-		old_row = new_state.board[action[0]]
-		old_diag = action[0] + old_row
-		diag = action[0] + action[1]
-		new_state.board[action[0]] = action[1]
+		new_state.board[column] = new_row
 		new_state.row[old_row] -= 1
-		new_state.row[action[1]] += 1
-		new_state.northeast[old_diag] -= 1
-		new_state.northeast[diag] += 1
-		new_state.southeast[old_diag] -= 1
-		new_state.southeast[diag] += 1
+		new_state.row[new_row] += 1
+		new_state.northeast[old_diag_ne] -= 1
+		new_state.northeast[new_diag_ne] += 1
+		new_state.southeast[old_diag_se] -= 1
+		new_state.southeast[new_diag_se] += 1
 		return new_state
 
 	def score(self, state):
