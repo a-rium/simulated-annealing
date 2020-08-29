@@ -87,6 +87,17 @@ def frasconi_schedule(t0, alpha):
 	return schedule
 	
 
+def exp_schedule(k, λ, limit):
+	""" Funzione di schedule riportata sul libro R&N """
+	def eschedule(t):
+		if t < limit:
+			return k * math.exp(-λ * t)
+		else:
+			return 0
+
+	return eschedule
+
+
 def log_schedule(t0, speedup):
 	def schedule(t):
 		return t0 / (speedup * math.log2(1.1 + t))
