@@ -109,12 +109,16 @@ def print_checkboard(n, queens_rows):
 def main():
 	if len(sys.argv) < 2:
 		print("Specificare N")
-		exit()
+		return
 
 	try:
 		n = int(sys.argv[1])
+		if n <= 3:
+			print("N deve essere un numero intero positivo maggiore di 3")
+			return
 	except TypeError:
 		print("N deve essere un numero intero positivo")
+		return
 	
 	t0 = walid_initial_temperature_estimate(QueensProblem.random, n, acceptance=0.95, iterations=10**4)
 	if t0 < 8:
