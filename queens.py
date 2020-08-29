@@ -8,8 +8,22 @@ class QueensState(object):
 	def __init__(self, board, row, northeast, southeast):
 		self.board = board
 		self.row = row
-		self.southeast = southeast
 		self.northeast = northeast
+		self.southeast = southeast
+
+	@classmethod
+	def from_board(cls, board):
+		n = len(board)
+		state_row = collections.defaultdict(lambda: 0)
+		northeast = collections.defaultdict(lambda: 0)
+		southeast = collections.defaultdict(lambda: 0)
+		for column, row in enumerate(board):
+			diag_ne = column + row
+			diag_se = n - 1 - column + row
+			state_row[row] += 1
+			northeast[diag_ne] += 1
+			southeast[diag_se] += 1
+		return QueensState(board, state_row, northeast, southeast)
 
 	def copy(self):
 		board = self.board.copy()
@@ -20,17 +34,19 @@ class QueensState(object):
 
 
 class QueensProblem(Problem):
-	def __init__(self, n):
-		self.n = n
+	def __init__(self, state):
+		self.n = len(state.board)
+		super().__init__(state)
+
+	@classmethod
+	def default(cls, n):
 		board = [0] * n
-		row = collections.defaultdict(lambda: 0)
-		northeast = collections.defaultdict(lambda: 0)
-		southeast = collections.defaultdict(lambda: 0)
-		row[0] = n
-		for i in range(n):
-			northeast[i] = 1
-			southeast[i] = 1
-		super().__init__(QueensState(board, row, northeast, southeast))
+		return QueensProblem(QueensState.from_board(board))
+
+	@classmethod
+	def random(cls, n):
+		board = [random.randint(0, n - 1) for i in range(n)]
+		return QueensProblem(QueensState.from_board(board))
 
 	def action(self, state):
 		moves = []
@@ -69,16 +85,6 @@ class QueensProblem(Problem):
 		return points
 
 	
-class MySchedule(object):
-	def __init__(self, starting_temperature):
-		self.temperature = starting_temperature
-
-	def __call__(self, time):
-		result = self.temperature
-		self.temperature *= 0.99
-		return result
-		
-
 def modified_frasconi_schedule(t0, alpha):
 	import math
 	def schedule(t):
@@ -110,19 +116,25 @@ def main():
 	except TypeError:
 		print("N deve essere un numero intero positivo")
 	
-	problem = QueensProblem(n)
-	t0 = 2
-	alpha = 3
+	t0 = walid_initial_temperature_estimate(QueensProblem.random, n, acceptance=0.95, iterations=10**4)
+	if t0 < 8:
+		alpha = 2
+		schedule = frasconi_schedule(t0, alpha)
+	else:
+		schedule = log_schedule(t0, 3)
+
 	tries = 0
 	raise_temperature_after = 20
 	while True:
-		print("\rAnnealing temperature: {:>4}, try no. {:>6}".format(t0, tries), end="")
-		solution = simulated_annealing(problem, frasconi_schedule(t0, alpha), 2**33)
-		# solution = simulated_annealing(problem, modified_frasconi_schedule(t0, alpha), 2**33)
-		# solution = simulated_annealing(problem, MySchedule(t0), 2**33)
+		print("\rAnnealing temperature: {:>4}, try no. {:>6}, score ".format(t0, tries), end="")
+
+		problem = QueensProblem.random(n)
+		solution = simulated_annealing(problem, schedule, max_iterations=2**32, transitions_per_temperature=3)
+
 		if solution is not None:
 			tries += 1
 			score = problem.score(solution)
+			print("{:>4}".format(score), end="")
 			if score == n:
 				print()
 				print("Good solution!")
@@ -132,7 +144,7 @@ def main():
 				print_checkboard(n, solution.board)
 				break
 			elif tries % raise_temperature_after == 0:
-				t0 += 1
+				pass
 
 
 if __name__ == "__main__":
