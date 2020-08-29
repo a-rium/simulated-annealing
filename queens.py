@@ -75,7 +75,8 @@ class QueensProblem(Problem):
 		for column, row in enumerate(state.board):
 			diag_ne = column + row
 			diag_se = self.n - 1 - column + row
-			if state.row[row] > 1 or state.northeast[diag_ne] > 1 or state.southeast[diag_se] > 1:
+			under_attack = state.row[row] > 1 or state.northeast[diag_ne] > 1 or state.southeast[diag_se] > 1
+			if under_attack:
 				points -= 1
 		return points
 
@@ -83,14 +84,6 @@ class QueensProblem(Problem):
 		return self.score(state) == self.n
 
 	
-def modified_frasconi_schedule(t0, alpha):
-	import math
-	def schedule(t):
-		den = math.log2(t0 + alpha)
-		return t0 / (den * den)
-	return schedule
-
-
 def print_checkboard(n, queens):
 	empty = " "
 	queen_marker = "X"
@@ -110,35 +103,38 @@ def halt_execution(sig, frame):
 	Running = False
 	
 
+def process_arguments(args):
+	if len(args) < 2:
+		print("Utilizzo: passare la lunghezza del lato della scacchiera 'n' (n > 3)")
+		return None
+	else:
+		try:
+			n = int(sys.argv[1])
+			if n > 3:
+				return {"n": n}
+		except:
+			pass
+
+	print("Errore: n deve essere un numero intero positivo maggiore di 3")
+	return None
+
+
 def main():
-	if len(sys.argv) < 2:
-		print("Specificare N")
+	inputs = process_arguments(sys.argv)
+	if inputs is None:
 		return
 
-	try:
-		n = int(sys.argv[1])
-		if n <= 3:
-			print("N deve essere un numero intero positivo maggiore di 3")
-			return
-	except TypeError:
-		print("N deve essere un numero intero positivo")
-		return
-
+	n = inputs['n']
 	signal.signal(signal.SIGINT, halt_execution)
 	
-	walid_options = {"acceptance": 0.95, "iterations": 10**4}
-	t0 = 10
-	# t0 = walid_initial_temperature_estimate(QueensProblem.random, n, **walid_options)
+	walid_options = {"acceptance": 0.9, "iterations": 10**4}
+	t0 = walid_initial_temperature_estimate(QueensProblem.random, n, **walid_options)
 	print("Annealing temperature: {:>4}".format(t0))
 	if t0 < 8:
 		alpha = 2
 		schedule = frasconi_schedule(t0, alpha)
 	else:
 		schedule = log_schedule(t0, 2)
-
-	# schedule = exp_schedule(20, 0.001, 100)
-
-	raise_temperature_after = 20
 
 	average_score = None
 	best_score = None
@@ -171,8 +167,7 @@ def main():
 				print("===== Checkboard representation =====")
 				print_checkboard(n, solution.board)
 				break
-			elif tries % raise_temperature_after == 0:
-				pass
+
 	print()
 	print("==== Run-down =====")
 	print(f"Tries: {tries}")
