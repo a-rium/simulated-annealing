@@ -2,6 +2,7 @@ from search import *
 
 import sys
 import collections
+import signal
 
 
 class QueensState(object):
@@ -49,13 +50,7 @@ class QueensProblem(Problem):
 		return QueensProblem(QueensState.from_board(board))
 
 	def action(self, state):
-		moves = []
-		for column, row in enumerate(state.board):
-			if row > 0:
-				moves.append((column, row - 1))
-			if row < self.n - 1:
-				moves.append((column, row + 1))
-		return moves
+		return [(c, r) for r in range(self.n) for c in range(self.n) if c != r]
 
 	def result(self, action, state):
 		column, new_row = action
@@ -84,6 +79,9 @@ class QueensProblem(Problem):
 				points -= 1
 		return points
 
+	def is_good_solution(self, state):
+		return self.score(state) == self.n
+
 	
 def modified_frasconi_schedule(t0, alpha):
 	import math
@@ -106,6 +104,12 @@ def print_checkboard(n, queens_rows):
 	print("+" + ("-+" * n))
 
 
+Running = True
+def halt_execution(sig, frame):
+	global Running
+	Running = False
+	
+
 def main():
 	if len(sys.argv) < 2:
 		print("Specificare N")
@@ -119,27 +123,47 @@ def main():
 	except TypeError:
 		print("N deve essere un numero intero positivo")
 		return
+
+	signal.signal(signal.SIGINT, halt_execution)
 	
-	t0 = walid_initial_temperature_estimate(QueensProblem.random, n, acceptance=0.95, iterations=10**4)
+	walid_options = {"acceptance": 0.95, "iterations": 10**4}
+	t0 = 10
+	# t0 = walid_initial_temperature_estimate(QueensProblem.random, n, **walid_options)
+	print("Annealing temperature: {:>4}".format(t0))
 	if t0 < 8:
 		alpha = 2
 		schedule = frasconi_schedule(t0, alpha)
 	else:
-		schedule = log_schedule(t0, 3)
+		schedule = log_schedule(t0, 2)
 
-	tries = 0
+	# schedule = exp_schedule(20, 0.001, 100)
+
 	raise_temperature_after = 20
-	while True:
-		print("\rAnnealing temperature: {:>4}, try no. {:>6}, score ".format(t0, tries), end="")
 
+	average_score = None
+	best_score = None
+	worst_score = None
+	annealing_options = {"max_iterations": 2**32, "transitions_per_temperature": 1}
+	average_score = None
+	tries = 0
+	successful_tries = 0
+	while Running:
+		tries += 1
 		problem = QueensProblem.random(n)
-		solution = simulated_annealing(problem, schedule, max_iterations=2**32, transitions_per_temperature=3)
+		solution = simulated_annealing(problem, schedule, **annealing_options)
 
 		if solution is not None:
-			tries += 1
+			successful_tries += 1
 			score = problem.score(solution)
-			print("{:>4}".format(score), end="")
-			if score == n:
+			if average_score is not None:
+				average_score = (average_score + score) / 2
+			else:
+				average_score = score
+			if best_score is None or score > best_score:
+				best_score = score
+			if worst_score is None or score < worst_score:
+				worst_score = score
+			if problem.is_good_solution(solution):
 				print()
 				print("Good solution!")
 				print("===== Queens Problem representation =====")
@@ -149,6 +173,15 @@ def main():
 				break
 			elif tries % raise_temperature_after == 0:
 				pass
+	print()
+	print("==== Run-down =====")
+	print(f"Tries: {tries}")
+	print(f"\tSuccessful: {successful_tries}")
+	print("Results' scores:")
+	print(f"\tBest: {best_score}")
+	print(f"\tWorst: {worst_score}")
+	print(f"\tAverage: {average_score}")
+	
 
 
 if __name__ == "__main__":
