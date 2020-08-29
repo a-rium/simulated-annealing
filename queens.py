@@ -91,17 +91,17 @@ def modified_frasconi_schedule(t0, alpha):
 	return schedule
 
 
-def print_checkboard(n, queens_rows):
-	queens_columns = range(len(queens_rows))
-	queens = zip(queens_columns, queens_rows)
+def print_checkboard(n, queens):
 	empty = " "
-	occupied = "X"
-	for queen in sorted(queens,  key=lambda x: x[1]):
-		print("+" + ("-+" * n))
-		pre_queen = queen[0]
-		after_queen  = n - queen[0] - 1
-		print("|" +  (f"{empty}|" * pre_queen) + f"{occupied}|" + (f"{empty}|" * after_queen))
-	print("+" + ("-+" * n))
+	queen_marker = "X"
+	hline = "+" + ("-+" * n)
+	queens_positions_ordered_by_column = sorted(enumerate(queens), key=lambda x: x[1])
+	for column, _ in queens_positions_ordered_by_column:
+		print(hline)
+		pre_marker = "|" + (empty + "|") * column
+		after_marker  = "|" + (empty + "|") * (n - column - 1)
+		print(pre_marker + queen_marker + after_marker)
+	print(hline)
 
 
 Running = True
