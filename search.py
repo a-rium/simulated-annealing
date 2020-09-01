@@ -64,7 +64,7 @@ def walid_initial_temperature_estimate(make_random_problem, *args, acceptance, i
 
 def simulated_annealing(problem, schedule, *, transitions_per_temperature=1, max_iterations=10**6, freezing_at=0.5):
 	current = Node(problem.initial_state, problem.score(problem.initial_state))
-	for time in range(max_iterations):
+	for time in range(1, max_iterations + 1):
 		temperature = schedule(time)
 		if temperature < freezing_at:
 			return current.state
@@ -100,7 +100,7 @@ def exp_schedule(k, λ, limit):
 
 def log_schedule(t0, speedup):
 	def schedule(t):
-		return t0 / (speedup * math.log2(1.1 + t))
+		return t0 / (speedup * math.log2(1 + t))
 
 	return schedule
 
