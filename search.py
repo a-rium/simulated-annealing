@@ -1,5 +1,6 @@
 import math
 import random
+import time
 
 
 
@@ -22,45 +23,40 @@ class Problem(object):
 	def score(self, state):
 		pass
 
+	def goal(self, state):
+		pass
 
-def walid_initial_temperature_estimate(make_random_problem, *args, acceptance, iterations, ε=0.001):
-	""" 
-	Estimates the initial temperature needed so that the acceptance ratio is as requested
-	using Walid's algorithm (see
 
-	https://www.researchgate.net/publication/227061666_Computing_the_Initial_Temperature_of_Simulated_Annealing
+class LogSchedule(object):
+	def __init__(self, initial_temperature, speedup):
+		self.temperature = initial_temperature
+		self.speedup = speedup
 
-	for a more detailed explanation).
-	"""
-
-	i = 0
-	scores = []
-	while i < iterations:
-		problem = make_random_problem(*args)
-		current = Node(problem.initial_state, problem.score(problem.initial_state))
-		action = random.choice(problem.action(current.state))
-		state = problem.result(action, current.state)
-		candidate  = Node(state, problem.score(state))
-		gain = candidate.score - current.score
-		if gain < 0:
-			scores.append((candidate.score, current.score))
-			i += 1
+	def __call__(self, t):
+		return self.temperature / (self.speedup * math.log2(1 + t))
 	
-	def χ_hat(T):
-		num = sum([math.exp(-score[0] / T) for score in scores])
-		den = sum([math.exp(-score[1] / T) for score in scores])
+	def reschedule(self, tries):
+		pass
 
-		return num / den
-	
-	t0 = 1
-	log_acceptance = math.log(acceptance)
+
+def solve_by_simulated_annealing(make_problem, schedule, **options):
+	tries = 1
+	start = time.time()
 	while True:
-		estimate = χ_hat(t0)
-		if abs(acceptance - estimate) < ε:
-			return -t0
-		else:
-			t0 = t0 * ((math.log(estimate) / log_acceptance))
+		problem = make_problem()
+		solution = simulated_annealing(problem, schedule, **options)
 
+		if solution is not None:
+			if problem.goal(solution):
+				end = time.time()
+				break
+
+		tries += 1
+		schedule.reschedule(tries)
+				
+
+	return solution, end - start
+	
 
 def simulated_annealing(problem, schedule, *, transitions_per_temperature=1, max_iterations=10**6, freezing_at=0.5):
 	current = Node(problem.initial_state, problem.score(problem.initial_state))
