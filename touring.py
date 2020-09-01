@@ -27,7 +27,6 @@ class TouringProblem(Problem):
 		new_path[a], new_path[b] = new_path[b], new_path[a]
 		return new_path
 
-
 	def score(self, state):
 		arc = frozenset((self.starting_city, state[0]))
 		distance = self.graph[arc]

@@ -44,17 +44,17 @@ def main():
 	}
 
 	problem = TouringProblem.random(n, 0)
-	print("===== TouringProblem instance =====")
-	print(f"Cities' graph:")
+	print("===== Istanza di TouringProblem =====")
+	print(f"Grafo delle citta':")
 	print_graph(problem.graph, "\t")
 
 	solution = simulated_annealing(problem, schedule, **annealing_options)
 	if solution is not None:
 		distance = -problem.score(solution)
-		print("Found solution!")
-		print(f"Minimum distance is {distance}")
+		print("Trovata una soluzione!")
+		print(f"La distanza minima da percorrere e' {distance}")
 	else:
-		print("Could not find solution!")
+		print("Non e' stato possibile trovare una soluzione")
 
 
 if __name__ == "__main__":
