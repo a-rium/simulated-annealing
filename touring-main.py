@@ -4,6 +4,13 @@ from search import *
 import sys
 
 
+def print_graph(graph, prefix=""):
+	for arc in graph:
+		weight = graph[arc]
+		arc_representation = "-".join([str(e) for e in arc])
+		print(f"{prefix}{arc_representation}: {weight}")
+
+
 def process_arguments(args):
 	if len(args) < 2:
 		print("Utilizzo: passare il numero di citta'.")
@@ -18,13 +25,6 @@ def process_arguments(args):
 
 	print("Errore: il numero di citta' deve essere un numero intero positivo maggiore di 2")
 	return None
-
-
-def print_graph(graph, prefix=""):
-	for arc in graph:
-		weight = graph[arc]
-		arc_representation = "-".join([str(e) for e in arc])
-		print(f"{prefix}{arc_representation}: {weight}")
 
 
 def main():
