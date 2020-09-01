@@ -4,19 +4,33 @@ from search import *
 import sys
 
 
-def main():
-	if len(sys.argv) < 2:	
-		print("Specificare il numero di citta'.")
-		return
+def process_arguments(args):
+	if len(args) < 2:
+		print("Utilizzo: passare il numero di citta'.")
+		return None
+	else:
+		try:
+			n = int(sys.argv[1])
+			if n > 3:
+				return {"n": n}
+		except:
+			pass
 
-	try:
-		n = int(sys.argv[1])
-		if n < 3:
-			print("Il numero di citta' deve essere un numero intero positivo maggiore di 2")
-			return
-	except TypeError:
-		print("Il numero di citta' deve essere un numero intero positivo maggiore di 2")
-		return
+	print("Errore: il numero di citta' deve essere un numero intero positivo maggiore di 2")
+	return None
+
+
+def print_graph(graph, prefix=""):
+	for arc in graph:
+		weight = graph[arc]
+		arc_representation = "-".join([str(e) for e in arc])
+		print(f"{prefix}{arc_representation}: {weight}")
+
+
+def main():
+	inputs = process_arguments(sys.argv)
+	
+	n = inputs["n"]
 
 	t0 = 20
 	freezing_at = 0.1
@@ -32,19 +46,15 @@ def main():
 	problem = TouringProblem.random(n, 0)
 	print("===== TouringProblem instance =====")
 	print(f"Cities' graph:")
-	for arc in problem.graph.keys():
-		distance = problem.graph[arc]
-		print("\t" + "-".join([str(e) for e in arc]) + ": " + str(distance))
-	print()
+	print_graph(problem.graph, "\t")
 
-	results = simulated_annealing(problem, schedule, **annealing_options)
-	if results is None:
-		print("Could not find solution!")
-	else:
-		solution = results
+	solution = simulated_annealing(problem, schedule, **annealing_options)
+	if solution is not None:
 		distance = -problem.score(solution)
 		print("Found solution!")
 		print(f"Minimum distance is {distance}")
+	else:
+		print("Could not find solution!")
 
 
 if __name__ == "__main__":
