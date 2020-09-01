@@ -50,7 +50,7 @@ class QueensProblem(Problem):
 		return QueensProblem(QueensState.from_board(board))
 
 	def action(self, state):
-		return list(itertools.combinations(range(self.n), 2))
+		return list(itertools.permutations(range(self.n - 1, -1, -1), 2))
 
 	def result(self, action, state):
 		col, new_row = action
