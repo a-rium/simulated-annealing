@@ -43,6 +43,8 @@ def main():
 		"freezing_at": freezing_at
 	}
 
+	print(f"Temperatura iniziale di annealing: {t0}")
+
 	problem = TouringProblem.random(n, 0)
 	print("===== Istanza di TouringProblem =====")
 	print(f"Grafo delle citta':")
