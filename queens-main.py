@@ -2,6 +2,7 @@ from queens import *
 from search import *
 
 import sys
+import time
 
 	
 def print_checkboard(n, queens):
@@ -54,6 +55,7 @@ def main():
 	print(f"Temperatura iniziale di annealing: {t0}")
 
 	tries = 0
+	start = time.time()
 	while True:
 		tries += 1
 		print(f"\rTentativo numero {tries}", end="")
@@ -63,6 +65,7 @@ def main():
 
 		if solution is not None:
 			if problem.goal(solution):
+				end = time.time()
 				print()
 				print("Trovata una soluzione!")
 				print("===== Rappresentazione del problema delle n regine =====")
@@ -70,6 +73,9 @@ def main():
 				print("===== Rappresentazione della scacchiera =====")
 				print_checkboard(n, solution.board)
 				break
+
+	timestamp = time.strftime("%H:%M:%S", time.gmtime(end - start))
+	print(f"Tempo impiegato: {timestamp}")
 
 
 if __name__ == "__main__":
