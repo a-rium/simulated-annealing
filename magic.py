@@ -20,12 +20,12 @@ class MagicSquareState():
 		nedsums = 0
 		sedsums = 0
 		positions = {}
-		for i, row in enumerate(matrix):
-			positions = {**positions, **{e: (i, j) for j, e in enumerate(row)}}
-			hsums[i] = sum(row)
-			vsums = [vsums[j] + row[j] for j in range(len(row))]
-			nedsums += matrix[i][i]
-			sedsums += matrix[i][n - 1 - i]
+		for irow, row in enumerate(matrix):
+			positions.update({number: (irow, icol) for icol, number in enumerate(row)})
+			hsums[irow] = sum(row)
+			vsums = [vsums[icol] + e for icol, e in enumerate(row)]
+			nedsums += matrix[irow][irow]
+			sedsums += matrix[irow][n - 1 - irow]
 		return MagicSquareState(matrix, hsums, vsums, nedsums, sedsums, positions)
 
 	def copy(self):
@@ -37,28 +37,20 @@ class MagicSquareState():
 
 
 class MagicSquareProblem(Problem):
-	moves = {}
-
-	def __init__(self, state):
-		self.n = len(state.matrix)
+	def __init__(self, initial_state):
+		self.n = len(initial_state.matrix)
 		self.magic_constant = self.n * (self.n**2 + 1) / 2
-		if self.n not in MagicSquareProblem.moves:
-			nrange = range(self.n)
-			MagicSquareProblem.moves[self.n] = [((a, b), (c, d)) for a in nrange for b in nrange for c in nrange for d in nrange]
-		super().__init__(state)
+		super().__init__(initial_state)
 	
 	@classmethod
 	def random(cls, n):
-		numbers = [z for z in range(1, n**2 + 1)]
-		random.shuffle(numbers)
+		n_squared = n**2
+		numbers = random.sample(range(1, n_squared + 1), n_squared)
 		matrix = [[z for z in numbers[i*n:(i+1)*n]] for i in range(n)]
 		return MagicSquareProblem(MagicSquareState.from_matrix(matrix))
 
-	def action2(self, state):
-		return MagicSquareProblem.moves[self.n]
-
 	def action(self, state):
-		return [(state.positions[i], state.positions[i+1]) for i in range(1, self.n**2)]
+		return [(state.positions[i], state.positions[i + 1]) for i in range(1, self.n**2)]
 	
 	def result(self, action, state):
 		from_row, from_col = action[0]
@@ -95,14 +87,9 @@ class MagicSquareProblem(Problem):
 	def score(self, state):
 		points = sum([abs(self.magic_constant - s) for s in state.hsums])
 		points += sum([abs(self.magic_constant - s) for s in state.vsums])
-		points += 0 if state.nedsums == self.magic_constant else 1
-		points += 0 if state.sedsums == self.magic_constant else 1
+		points += abs(self.magic_constant - state.nedsums)
+		points += abs(self.magic_constant - state.sedsums)
 		return -points
 
-	def score2(self, state):
-		points = state.hsums.count(self.magic_constant)
-		points += state.vsums.count(self.magic_constant)
-		points += 1 if state.nedsums == self.magic_constant else 0
-		points += 1 if state.sedsums == self.magic_constant else 0
-		return points
-
+	def goal(self, state):
+		return self.score(state) == 0
