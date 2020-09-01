@@ -2,6 +2,7 @@ from search import Problem
 
 import collections
 import random
+import itertools
 
 
 class QueensState(object):
@@ -17,9 +18,9 @@ class QueensState(object):
 		state_row = collections.defaultdict(lambda: 0)
 		northeast = collections.defaultdict(lambda: 0)
 		southeast = collections.defaultdict(lambda: 0)
-		for column, row in enumerate(board):
-			diag_ne = column + row
-			diag_se = n - 1 - column + row
+		for col, row in enumerate(board):
+			diag_ne = col + row
+			diag_se = (n - 1 - col) + row
 			state_row[row] += 1
 			northeast[diag_ne] += 1
 			southeast[diag_se] += 1
@@ -45,22 +46,22 @@ class QueensProblem(Problem):
 
 	@classmethod
 	def random(cls, n):
-		board = [random.randint(0, n - 1) for i in range(n)]
+		board = random.sample(range(n), n)
 		return QueensProblem(QueensState.from_board(board))
 
 	def action(self, state):
-		return [(c, r) for r in range(self.n) for c in range(self.n) if c != r]
+		return list(itertools.combinations(range(self.n), 2))
 
 	def result(self, action, state):
-		column, new_row = action
-		old_row = state.board[column]
-		old_diag_ne = column + old_row
-		new_diag_ne = column + new_row
-		old_diag_se = self.n - 1 - column + old_row
-		new_diag_se = self.n - 1 - column + new_row
+		col, new_row = action
+		old_row = state.board[col]
+		old_diag_ne = col + old_row
+		new_diag_ne = col + new_row
+		old_diag_se = self.n - 1 - col + old_row
+		new_diag_se = self.n - 1 - col + new_row
 
 		new_state = state.copy()
-		new_state.board[column] = new_row
+		new_state.board[col] = new_row
 		new_state.row[old_row] -= 1
 		new_state.row[new_row] += 1
 		new_state.northeast[old_diag_ne] -= 1
@@ -71,14 +72,14 @@ class QueensProblem(Problem):
 
 	def score(self, state):
 		points = self.n
-		for column, row in enumerate(state.board):
-			diag_ne = column + row
-			diag_se = self.n - 1 - column + row
+		for col, row in enumerate(state.board):
+			diag_ne = col + row
+			diag_se = (self.n - 1 - col) + row
 			under_attack = state.row[row] > 1 or state.northeast[diag_ne] > 1 or state.southeast[diag_se] > 1
 			if under_attack:
 				points -= 1
 		return points
 
-	def is_good_solution(self, state):
+	def goal(self, state):
 		return self.score(state) == self.n
 
