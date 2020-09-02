@@ -2,61 +2,56 @@ from touring import *
 from search import *
 
 import sys
+import time
 
 
 def print_graph(graph, prefix=""):
-	for arc in graph:
-		weight = graph[arc]
-		arc_representation = "-".join([str(e) for e in arc])
-		print(f"{prefix}{arc_representation}: {weight}")
-
-
-def process_arguments(args):
-	if len(args) < 2:
-		print("Utilizzo: passare il numero di citta'.")
-		return None
-	else:
-		try:
-			n = int(sys.argv[1])
-			if n >= 3:
-				return {"n": n}
-		except:
-			pass
-
-	print("Errore: il numero di citta' deve essere un numero intero positivo maggiore di 2")
-	return None
+	with open("graph.tsp", "w") as f:
+		for arc in graph:
+			weight = graph[arc]
+			arc_representation = "-".join([str(e) for e in arc])
+			f.write(f"{prefix}{arc_representation}: {weight}\n")
 
 
 def main():
 	inputs = process_arguments(sys.argv)
-	
-	n = inputs["n"]
+	if inputs is None:
+		return
+	elif inputs.n < 3:
+		print("Errore: il numero di citta' deve essere maggiore di 2")
+		return
 
-	t0 = 20
-	freezing_at = 0.1
-	c = 10
-
-	schedule = log_schedule(t0, c)
-	annealing_options = {
-		"max_iterations": 2**32,
-		"transitions_per_temperature": 1,
-		"freezing_at": freezing_at
+	options = {
+		"max_iterations": inputs.max_iterations,
+		"transitions_per_temperature": inputs.transitions_per_temperature,
+		"freezing_at": inputs.freezing_at
 	}
 
-	print(f"Temperatura iniziale di annealing: {t0}")
+	print(f"Temperatura iniziale di annealing: {inputs.t}")
 
-	problem = TouringProblem.random(n, 0)
+	problem = TouringProblem.random(inputs.n, 0)
 	print("===== Istanza di TouringProblem =====")
 	print(f"Grafo delle citta':")
 	print_graph(problem.graph, "\t")
 
-	solution = simulated_annealing(problem, schedule, **annealing_options)
+	start = time.time()
+	schedule = log_schedule(inputs.t, inputs.c)
+	solution = simulated_annealing(problem, schedule, **options)
 	if solution is not None:
+		end = time.time()
 		distance = -problem.score(solution)
 		print("Trovata una soluzione!")
 		print(f"La distanza minima da percorrere e' {distance}")
+
+		path = [str(city) for city in solution]
+		print(f"Percorso: " + ", ".join(["0", *path]))
 	else:
 		print("Non e' stato possibile trovare una soluzione")
+	
+	elapsed = end - start
+	timestamp = time.strftime("%H:%M:%S", time.gmtime(elapsed))
+	print(f"Tempo impiegato: {timestamp}")
+
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import math
 import random
 import time
-
+import argparse
 
 
 class Node(object):
@@ -73,6 +73,22 @@ def simulated_annealing(problem, schedule, *, transitions_per_temperature=1, max
 			if gain > 0 or random.random() < math.exp(gain / temperature):
 				current = candidate
 
+	return None
+
+
+def process_arguments(args):
+	parser = argparse.ArgumentParser()
+	parser.add_argument("n", type=int)
+	parser.add_argument("-t", default=20, type=float)
+	parser.add_argument("-c", default=10, type=float)
+	parser.add_argument("--freezing-at", default=0.1, dest="freezing_at", type=float)
+	parser.add_argument("--transitions-per-temperature", default=1, dest="transitions_per_temperature", type=float)
+	parser.add_argument("--max-iterations", default=2**32, dest="max_iterations", type=int)
+	inputs = parser.parse_args()
+	if inputs.t <= 0:
+		print("Initial temperature must be positive")
+	else:
+		return inputs
 	return None
 
 

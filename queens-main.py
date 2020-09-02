@@ -26,33 +26,12 @@ def print_checkboard(queens):
 	print(hline)
 
 
-def value_or_none_if_raises(f, *args, **kwargs):
-	try:
-		return f(*args, **kwargs)
-	except:
-		return None
-
-
-def process_arguments(args):
-	parser = argparse.ArgumentParser()
-	parser.add_argument("n", type=int)
-	parser.add_argument("-t", default=20, type=float)
-	parser.add_argument("-c", default=10, type=float)
-	parser.add_argument("--freezing-at", default=0.1, dest="freezing_at", type=float)
-	parser.add_argument("--transitions-per-temperature", default=1, dest="transitions_per_temperature", type=float)
-	parser.add_argument("--max-iterations", default=2**32, dest="max_iterations", type=int)
-	inputs = parser.parse_args()
-	if inputs.n < 4:
-		print("Il numero di regine deve essere maggiore di 3")
-	elif inputs.t <= 0:
-		print("Initial temperature must be positive")
-	else:
-		return inputs
-
-
 def main():
 	inputs = process_arguments(sys.argv)
 	if inputs is None:
+		return
+	elif inputs.n < 3:
+		print("Errore: il numero di regine deve essere maggiore di 3")
 		return
 
 	options = {
@@ -75,7 +54,6 @@ def main():
 
 	timestamp = time.strftime("%H:%M:%S", time.gmtime(elapsed))
 	print(f"Tempo impiegato: {timestamp}")
-
 
 
 if __name__ == "__main__":
